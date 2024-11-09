@@ -24,25 +24,16 @@ function GameBoard() {
     return boardWithCellValues;
   };
 
-  //const getEmptyCells = () => {
-    //const boardWithCellValues = board.map((row) =>
-      //row.map((cell) => (cell.getValue() === "" ? true : false))
-    //);
-    //return boardWithCellValues;
-  //};
-
   const fillCell = (coordinates, player) => {
     const row = coordinates[0];
     const col = coordinates[1];
     if (board[row][col].getValue() !== "") {
-      console.log("Cell isn't empty!!");
       return false;
     }
 
     board[row][col].setValue(player.symbol);
     return true;
-  }
-
+  };
 
   return { getBoard, printBoard, fillCell };
 }
@@ -66,16 +57,17 @@ function GameController(
   const players = [
     {
       name: playerOneName,
-      symbol: "O",
+      symbol: "o",
     },
     {
       name: playerTwoName,
-      symbol: "X",
-    }
-  ]
+      symbol: "x",
+    },
+  ];
 
   let activePlayer = players[0];
-  const board = GameBoard(); 
+  let isGameOver = false;
+  const board = GameBoard();
 
   const getActivePlayer = () =>
     (activePlayer = activePlayer === players[0] ? players[0] : players[1]);
@@ -85,7 +77,6 @@ function GameController(
 
   const printNewRound = () => {
     board.printBoard();
-    console.log(`${getActivePlayer().name}'s turn.`);
   };
 
   const checkWinCondition = () => {
@@ -112,29 +103,56 @@ function GameController(
     return false;
   };
 
-  const playRound = () => {
+  const playRound = (coordinates) => {
     const activePlayer = getActivePlayer();
-    const coordinates = [0, 0];
+    const _coordinates = coordinates;
 
-    if (checkWinCondition()) {
-      return `${activePlayer.name} = won!`;
+    if (!board.fillCell(_coordinates, activePlayer) || isGameOver) {
+      return false;
     }
 
-    if (!board.fillCell(coordinates, activePlayer)) {
-      return;
+    if (!isGameOver && checkWinCondition()) {
+      isGameOver = true;
+      return true;
     }
-  }
 
-  printNewRound();
-  switchActivePlayer();
-  
+    printNewRound();
+    switchActivePlayer();
+    return true;
+  };
+
   return { getActivePlayer, playRound };
 }
 
-function main() {
-  GameBoard().printBoard();
-  //GameBoard().getEmptyCells();
-  //GameController("Pl_1", "Pl_2").checkWinCondition();
+function ScreenController() {
+  const playerNames = ["Player_1", "Player_2"];
+  const game = GameController(playerNames[0], playerNames[1]);
+  const boardDiv = document.querySelector(".game-board");
+  const boardCellClassDiv = "board-cell";
+  const activePlayerDiv = document.querySelector(".player-turn");
+
+  const updatePlayerTurn = () => {
+    const activePlayer = game.getActivePlayer();
+    activePlayerDiv.textContent = "";
+    activePlayerDiv.textContent = `${activePlayer.name}'s turn!`;
+  };
+
+  const clickHandlerBoard = () => {
+    boardDiv.addEventListener("click", (e) => {
+      const cell = e?.target;
+      if (cell?.classList?.contains(boardCellClassDiv)) {
+        const activePlayer = game.getActivePlayer();
+
+        game.playRound(cell.id)
+          ? (cell.classList.add(`symbol-${activePlayer.symbol}`),
+            updatePlayerTurn())
+          : console.log("Cell isn't empty or game is over!");
+      }
+    });
+  };
+
+  updatePlayerTurn();
+  clickHandlerBoard();
 }
 
-main();
+ScreenController();

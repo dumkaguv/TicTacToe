@@ -8,11 +8,17 @@
     />
     <title>Document</title>
     <link rel="stylesheet" href="./style.css" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v6.6.0/css/all.css"
+    />
   </head>
   <body>
     <main class="root">
       <div class="game-info">
-        <div class="player-turn">Player_1's turn!</div>
+        <div class="player-turn">
+          <i class="fa-solid fa-person"></i> Player_1's turn!
+        </div>
       </div>
       <div class="game-board">
         <div class="board-cell" id="00"></div>
@@ -25,8 +31,43 @@
         <div class="board-cell" id="21"></div>
         <div class="board-cell" id="22"></div>
       </div>
-      <div class="game-buttons"></div>
+      <div class="game-buttons">
+        <button class="btn btn-restart" type="button">
+          Restart game <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+      </div>
     </main>
+    <div class="modal modal-restart">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div class="modal-text modal-restart-text">
+          Do you really want to start over?
+        </div>
+        <div class="modal-restart-buttons">
+          <button class="btn modal-restart-btn btn-yes" type="button">
+            Yes
+          </button>
+          <button class="btn modal-restart-btn btn-no" type="button">
+            No
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal modal-initial">
+      <div class="modal-content">
+        <div class="modal-text modal-initial-text">
+          Enter player's names
+        </div>
+        <div class="modal-initial-inputs">
+          <label for="playerOneName">First player</label>
+          <input type="text" class="input" name="playerOneName" id="playerOneName">
+          <label for="playerTwoName">Second player</label>
+          <input type="text" class="input" name="playerTwoName" id="playerTwoName">
+        </div>
+        <button class="btn start-game-btn" type="button">Start game!</button>
+      </div>
+    </div>
     <script src="./script.js"></script>
   </body>
 </html>

@@ -5,7 +5,6 @@ function GameBoard() {
   const cols = 3;
   const board = [];
 
-  // IIFE
   (function createGameBoard() {
     for (let row = 0; row < rows; ++row) {
       board.push([]);
@@ -21,6 +20,7 @@ function GameBoard() {
     const boardWithCellValues = board.map((row) =>
       row.map((cell) => cell.getValue())
     );
+    console.log(boardWithCellValues);
     return boardWithCellValues;
   };
 
@@ -68,6 +68,8 @@ function GameController(
   let activePlayer = players[0];
   let isGameOver = false;
   const board = GameBoard();
+
+  const getIsGameOver = () => isGameOver;
 
   const getActivePlayer = () =>
     (activePlayer = activePlayer === players[0] ? players[0] : players[1]);
@@ -121,38 +123,116 @@ function GameController(
     return true;
   };
 
-  return { getActivePlayer, playRound };
+  return { getActivePlayer, playRound, getIsGameOver };
 }
 
 function ScreenController() {
-  const playerNames = ["Player_1", "Player_2"];
-  const game = GameController(playerNames[0], playerNames[1]);
+  let game = null;
   const boardDiv = document.querySelector(".game-board");
-  const boardCellClassDiv = "board-cell";
   const activePlayerDiv = document.querySelector(".player-turn");
+  const restartGameBtn = document.querySelector(".btn-restart");
+  const initialModal = document.querySelector(".modal-initial");
+
+  const initGame = async () => {
+    initialModal.style.display = "block";
+    const playerNames = await getPlayerNames();
+    game = GameController(playerNames[0], playerNames[1]);
+    updatePlayerTurn();
+    clickHandlerBoard();
+  };
+
+  function gatherInfoFromInitialModal() {
+    const firstPlayerName = document.getElementById("playerOneName").value;
+    const secondPlayerName = document.getElementById("playerTwoName").value;
+    return [firstPlayerName, secondPlayerName];
+  }
+
+  function getPlayerNames() {
+    return new Promise((resolve) => {
+      document
+        .querySelector(".start-game-btn")
+        .addEventListener("click", () => {
+          initialModal.style.display = "none";
+          resolve(gatherInfoFromInitialModal());
+        });
+    });
+  }
 
   const updatePlayerTurn = () => {
     const activePlayer = game.getActivePlayer();
-    activePlayerDiv.textContent = "";
-    activePlayerDiv.textContent = `${activePlayer.name}'s turn!`;
+    activePlayerDiv.innerHTML = `<i class="fa-solid fa-person"></i> ${activePlayer.name}'s turn!`;
+  };
+
+  const printGameIsOver = () => {
+    const activePlayer = game.getActivePlayer();
+    activePlayerDiv.innerHTML = `<i class="fa-solid fa-person"></i> ${activePlayer.name}'s won! <i class="fa-solid fa-hand-peace"></i>`;
   };
 
   const clickHandlerBoard = () => {
     boardDiv.addEventListener("click", (e) => {
       const cell = e?.target;
-      if (cell?.classList?.contains(boardCellClassDiv)) {
+      if (cell?.classList?.contains("board-cell")) {
         const activePlayer = game.getActivePlayer();
 
         game.playRound(cell.id)
           ? (cell.classList.add(`symbol-${activePlayer.symbol}`),
             updatePlayerTurn())
           : console.log("Cell isn't empty or game is over!");
+
+        if (game.getIsGameOver()) {
+          printGameIsOver();
+        }
       }
     });
   };
 
-  updatePlayerTurn();
-  clickHandlerBoard();
+  const restartGame = async () => {
+    const isReseting = await setupRestartModal();
+    if (!isReseting) return;
+
+    await initGame();
+    wipeBoard();
+    updatePlayerTurn();
+
+    function wipeBoard() {
+      const cells = document.querySelectorAll(".board-cell");
+      cells.forEach((cell) => {
+        if (
+          cell?.classList?.contains("symbol-o") ||
+          cell?.classList?.contains("symbol-x")
+        ) {
+          cell?.classList?.remove("symbol-o");
+          cell?.classList?.remove("symbol-x");
+        }
+      });
+    }
+
+    function setupRestartModal() {
+      return new Promise((resolve) => {
+        const restartModal = document.querySelector(".modal-restart");
+        restartModal.style.display = "block";
+
+        restartModal.addEventListener("click", (e) => {
+          const isCloseArea =
+            e?.target?.classList?.contains("modal-restart") ||
+            e?.target?.classList?.contains("modal-close") ||
+            e?.target?.classList?.contains("btn-no");
+          const isReseting = e?.target?.classList?.contains("btn-yes");
+
+          if (isCloseArea) {
+            restartModal.style.display = "none";
+            resolve(false);
+          } else if (isReseting) {
+            restartModal.style.display = "none";
+            resolve(true);
+          }
+        });
+      });
+    }
+  };
+  restartGameBtn.addEventListener("click", restartGame);
+
+  initGame();
 }
 
 ScreenController();
